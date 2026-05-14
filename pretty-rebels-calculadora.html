@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora — Pretty Rebels Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --primary: #FF1F8E;
+      --secondary: #9B6FE8;
+      --accent: #F4A7C3;
+      --text: #FFFFFF;
+      --muted: rgba(255,255,255,0.5);
+      --surface: rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border: rgba(244,167,195,0.14);
+      --grad: linear-gradient(135deg, #FF1F8E, #9B6FE8);
+      --r: 14px;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(45deg, rgba(255,255,255,0.016) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.016) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.016) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.016) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 48px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 24px 0 16px;
+    }
+
+    .logo-wrap {
+      width: 88px;
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .logo-fallback {
+      font-family: 'Abril Fatface', cursive;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .header-title {
+      font-family: 'Abril Fatface', cursive;
+      font-size: 24px;
+      letter-spacing: 0.08em;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-sub {
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── PROGRESS ── */
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 4px 0 22px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.13);
+      transition: all 0.3s;
+    }
+
+    .dot.active {
+      background: var(--primary);
+      box-shadow: 0 0 8px rgba(255,31,142,0.55);
+      width: 22px;
+      border-radius: 4px;
+    }
+
+    .dot.done { background: var(--secondary); }
+
+    /* ── STEP ── */
+    .step {
+      display: none;
+      width: 100%;
+      max-width: 500px;
+      animation: fadeUp 0.28s ease;
+    }
+
+    .step.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .step-title {
+      font-family: 'Abril Fatface', cursive;
+      font-size: 20px;
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+
+    /* ── INPUTS ── */
+    .igroup { margin-bottom: 18px; }
+    .igroup:last-child { margin-bottom: 0; }
+
+    .ilabel {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .ifield {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .ifield:focus { border-color: var(--primary); }
+
+    input[type="date"].ifield::-webkit-calendar-picker-indicator {
+      filter: invert(0.6); cursor: pointer;
+    }
+
+    /* ── SERVICE OPTIONS ── */
+    .srv-opt {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface);
+      user-select: none;
+    }
+
+    .srv-opt:last-of-type { margin-bottom: 0; }
+    .srv-opt:hover { border-color: rgba(255,31,142,0.3); background: var(--surface2); }
+
+    .srv-opt.selected {
+      border-color: var(--primary);
+      background: rgba(255,31,142,0.08);
+    }
+
+    .radio-dot {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.2s;
+    }
+
+    .srv-opt.selected .radio-dot { border-color: var(--primary); }
+
+    .radio-dot::after {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .srv-opt.selected .radio-dot::after { opacity: 1; }
+
+    .srv-info { flex: 1; padding: 0 12px; }
+    .srv-name { font-size: 15px; font-weight: 500; }
+    .srv-price { font-size: 13px; color: var(--muted); }
+    .srv-opt.selected .srv-price { color: var(--primary); font-weight: 600; }
+
+    /* ── SOFT GEL SUB ── */
+    .softgel-sub {
+      display: none;
+      background: rgba(155,111,232,0.08);
+      border: 1px solid rgba(155,111,232,0.22);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: -4px;
+      margin-bottom: 8px;
+    }
+
+    .softgel-sub.on { display: block; }
+
+    .sub-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .talla-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .talla-btn {
+      padding: 10px 4px;
+      border: 1px solid rgba(155,111,232,0.3);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .talla-btn small {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .talla-btn:hover { border-color: var(--secondary); background: rgba(155,111,232,0.1); }
+
+    .talla-btn.sel {
+      border-color: var(--secondary);
+      background: rgba(155,111,232,0.2);
+      color: #dbbeff;
+    }
+
+    .xl-wrap { display: none; margin-top: 12px; }
+    .xl-wrap.on { display: flex; align-items: center; gap: 8px; }
+
+    /* ── CHECK OPTION (retoque & addons) ── */
+    .chk-opt {
+      display: flex;
+      align-items: flex-start;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface);
+      user-select: none;
+      gap: 12px;
+    }
+
+    .chk-opt:last-child { margin-bottom: 0; }
+    .chk-opt:hover { border-color: rgba(255,31,142,0.3); }
+    .chk-opt.on { border-color: var(--primary); background: rgba(255,31,142,0.07); }
+
+    .chk-box {
+      width: 20px; height: 20px; flex-shrink: 0;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      transition: all 0.2s;
+      margin-top: 1px;
+    }
+
+    .chk-opt.on .chk-box { background: var(--primary); border-color: var(--primary); }
+
+    .chk-info { flex: 1; }
+    .chk-name { font-size: 15px; font-weight: 500; }
+    .chk-sub  { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .chk-price{ font-size: 14px; font-weight: 700; color: var(--muted); flex-shrink: 0; }
+    .chk-opt.on .chk-price { color: var(--primary); }
+
+    /* ── NOTE BOX ── */
+    .note {
+      background: rgba(255,31,142,0.07);
+      border: 1px solid rgba(255,31,142,0.2);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.72);
+      margin-bottom: 16px;
+      line-height: 1.55;
+    }
+
+    /* ── COUNTERS ── */
+    .sec-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 16px 0 8px;
+    }
+
+    .sec-label:first-child { margin-top: 0; }
+
+    .ctr-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ctr-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .ctr-label { flex: 1; }
+    .ctr-name  { font-size: 14px; font-weight: 500; }
+    .ctr-unit  { font-size: 12px; color: var(--accent); }
+
+    .ctr-ctrl  { display: flex; align-items: center; gap: 10px; }
+
+    .ctr-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px; border: none;
+      background: var(--grad);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.2s;
+      font-family: 'DM Sans', sans-serif;
+      line-height: 1;
+      padding-bottom: 2px;
+    }
+
+    .ctr-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+    .ctr-btn:not(:disabled):hover { opacity: 0.82; }
+
+    .ctr-val {
+      min-width: 26px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* ── MANUAL ROWS ── */
+    .man-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+    }
+
+    .man-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .man-name { font-size: 14px; font-weight: 500; flex: 1; }
+    .man-input-wrap { display: flex; align-items: center; gap: 5px; }
+    .man-pre { font-size: 14px; color: var(--muted); }
+
+    .man-input {
+      width: 88px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      text-align: right;
+      outline: none;
+    }
+
+    .man-input:focus { border-color: var(--secondary); }
+
+    /* ── TOGGLES ── */
+    .tog-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .tog-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .tog-info { flex: 1; }
+    .tog-name  { font-size: 14px; font-weight: 500; }
+    .tog-price { font-size: 12px; color: var(--accent); margin-top: 2px; }
+
+    .tog-switch {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .tog-btn {
+      padding: 7px 13px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tog-btn.no.act  { background: rgba(255,255,255,0.09); color: var(--text); }
+    .tog-btn.si.act  { background: var(--primary); color: #fff; }
+
+    /* ── ADDON CARDS ── */
+    .addon-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      user-select: none;
+    }
+
+    .addon-card:last-child { margin-bottom: 0; }
+    .addon-card:hover { border-color: rgba(255,31,142,0.3); }
+    .addon-card.on { border-color: var(--primary); }
+
+    .addon-head {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--surface);
+      gap: 12px;
+    }
+
+    .addon-card.on .addon-head { background: rgba(255,31,142,0.08); }
+
+    .addon-chk {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .addon-card.on .addon-chk { background: var(--primary); border-color: var(--primary); }
+
+    .addon-name  { flex: 1; font-size: 15px; font-weight: 600; }
+    .addon-price { font-size: 15px; font-weight: 700; color: var(--primary); }
+
+    .addon-body {
+      padding: 0 16px 14px;
+      background: var(--surface);
+    }
+
+    .addon-card.on .addon-body { background: rgba(255,31,142,0.04); }
+
+    .addon-body ul { list-style: none; }
+
+    .addon-body li {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 3px 0 3px 16px;
+      position: relative;
+    }
+
+    .addon-body li::before {
+      content: '·';
+      position: absolute;
+      left: 4px;
+      color: var(--primary);
+    }
+
+    /* ── NAV BUTTONS ── */
+    .nav {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-pri { background: var(--grad); color: #fff; }
+    .btn-pri:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .btn-sec {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-sec:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── SUMMARY ── */
+    .sum-header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .sum-name {
+      font-family: 'Abril Fatface', cursive;
+      font-size: 28px;
+      letter-spacing: 0.06em;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sum-date { font-size: 14px; color: var(--accent); margin-top: 4px; }
+
+    .sum-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .sum-sec-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .sum-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 4px 0;
+      font-size: 14px;
+    }
+
+    .sum-item-label { color: rgba(255,255,255,0.8); flex: 1; padding-right: 8px; }
+    .sum-item-price { font-weight: 700; white-space: nowrap; }
+
+    .sum-total-box {
+      background: rgba(255,31,142,0.1);
+      border: 1px solid rgba(255,31,142,0.3);
+      border-radius: 14px;
+      padding: 22px;
+      text-align: center;
+      margin: 14px 0;
+    }
+
+    .sum-total-label {
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .sum-total-amt {
+      font-family: 'Abril Fatface', cursive;
+      font-size: 40px;
+      letter-spacing: 0.04em;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .btn-wa {
+      flex: 1;
+      background: #25D366;
+      color: #fff;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-wa:hover { opacity: 0.88; }
+
+    .btn-pdf {
+      flex: 1;
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn-pdf:hover { background: rgba(255,255,255,0.11); }
+
+    .btn-nueva {
+      width: 100%;
+      background: transparent;
+      color: var(--muted);
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-nueva:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    .sum-footer {
+      text-align: center;
+      padding: 14px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .sum-footer .handle { font-weight: 700; color: var(--primary); font-size: 15px; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(14px);
+      background: #25D366;
+      color: #fff;
+      padding: 11px 22px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 100;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── PRINT ── */
+    @media print {
+      body::before { display: none; }
+      body { background: #fff; color: #111; }
+      .nav, .action-btns, .btn-nueva, .progress, .header-sub { display: none !important; }
+      .step { display: block !important; }
+      .step:not(#step7) { display: none !important; }
+      .sum-name, .header-title, .sum-total-amt {
+        -webkit-text-fill-color: #111;
+        background: none;
+        color: #111;
+      }
+      .sum-total-box { background: #f5f5f5; border-color: #ccc; }
+      .sum-section { background: #fafafa; border-color: #ddd; }
+      .card { background: #fafafa; border-color: #ddd; }
+    }
+
+    @media (max-width: 380px) {
+      .talla-grid { grid-template-columns: repeat(2, 1fr); }
+      .sum-total-amt { font-size: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo-wrap">
+      <img src="pretty-rebels-logo.png" alt="Pretty Rebels Studio"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <div class="logo-fallback" style="display:none">PRETTY REBELS<br>STUDIO</div>
+    </div>
+    <h1 class="header-title">Calculadora de Presupuesto</h1>
+    <p class="header-sub">pretty rebels studio</p>
+  </header>
+
+  <!-- DOTS -->
+  <div class="progress" id="progress">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+  <!-- ══ PASO 1 ══ -->
+  <div class="step active" id="step1">
+    <div class="step-label">Paso 1 de 7</div>
+    <h2 class="step-title">Datos de la clienta</h2>
+    <div class="card">
+      <div class="igroup">
+        <label class="ilabel" for="clientName">Nombre</label>
+        <input type="text" id="clientName" class="ifield" placeholder="Ej: Valentina Gómez" autocomplete="off">
+      </div>
+      <div class="igroup">
+        <label class="ilabel" for="appointmentDate">Fecha de la cita</label>
+        <input type="date" id="appointmentDate" class="ifield">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PASO 2 ══ -->
+  <div class="step" id="step2">
+    <div class="step-label">Paso 2 de 7</div>
+    <h2 class="step-title">Servicio base</h2>
+
+    <div class="srv-opt" data-svc="semi">
+      <div class="radio-dot"></div>
+      <div class="srv-info">
+        <div class="srv-name">Semipermanente</div>
+        <div class="srv-price">$55.000</div>
+      </div>
+    </div>
+
+    <div class="srv-opt" data-svc="rubber">
+      <div class="radio-dot"></div>
+      <div class="srv-info">
+        <div class="srv-name">Rubber Base</div>
+        <div class="srv-price">$65.000</div>
+      </div>
+    </div>
+
+    <div class="srv-opt" data-svc="softgel" id="sg-opt">
+      <div class="radio-dot"></div>
+      <div class="srv-info">
+        <div class="srv-name">Soft Gel</div>
+        <div class="srv-price" id="sg-price-lbl">Selecciona una talla →</div>
+      </div>
+    </div>
+
+    <div class="softgel-sub" id="sg-sub">
+      <div class="sub-label">Talla del Soft Gel</div>
+      <div class="talla-grid">
+        <button class="talla-btn" data-talla="S" data-tp="60000">S<small>$60.000</small></button>
+        <button class="talla-btn" data-talla="M" data-tp="70000">M<small>$70.000</small></button>
+        <button class="talla-btn" data-talla="L" data-tp="100000">L<small>$100.000</small></button>
+        <button class="talla-btn" data-talla="XL" data-tp="0">XL<small>libre</small></button>
+      </div>
+      <div class="xl-wrap" id="xl-wrap">
+        <span class="man-pre" style="font-size:15px">$</span>
+        <input type="number" id="sg-xl-input" class="ifield" placeholder="0" min="0"
+               style="max-width:160px;padding:10px 12px">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PASO 3 ══ -->
+  <div class="step" id="step3">
+    <div class="step-label">Paso 3 de 7</div>
+    <h2 class="step-title">Retoque y mantenimiento</h2>
+    <div class="card">
+      <div class="chk-opt" id="retoque-opt">
+        <div class="chk-box" id="retoque-box"></div>
+        <div class="chk-info">
+          <div class="chk-name">Retoque de rubber / mantenimiento</div>
+          <div class="chk-sub">Igual al servicio base seleccionado</div>
+        </div>
+        <div class="chk-price" id="retoque-price">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PASO 4 ══ -->
+  <div class="step" id="step4">
+    <div class="step-label">Paso 4 de 7</div>
+    <h2 class="step-title">Decoraciones adicionales</h2>
+
+    <div class="note">
+      ✨ 2 uñas decoradas incluidas en el servicio base. Lo que sumes aquí es adicional.
+    </div>
+
+    <div class="card">
+      <div class="sec-label">Bling</div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Bling pequeño (hasta 10u)</div>
+          <div class="ctr-unit">$1.000 / set</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="blingPeq">−</button>
+          <span class="ctr-val" data-k="blingPeq">0</span>
+          <button class="ctr-btn" data-a="+" data-k="blingPeq">+</button>
+        </div>
+      </div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Bling mediano</div>
+          <div class="ctr-unit">$500 / u</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="blingMed">−</button>
+          <span class="ctr-val" data-k="blingMed">0</span>
+          <button class="ctr-btn" data-a="+" data-k="blingMed">+</button>
+        </div>
+      </div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Bling grande</div>
+          <div class="ctr-unit">$1.000 / u</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="blingGrand">−</button>
+          <span class="ctr-val" data-k="blingGrand">0</span>
+          <button class="ctr-btn" data-a="+" data-k="blingGrand">+</button>
+        </div>
+      </div>
+
+      <div class="sec-label">Cadenas y charms</div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Cadenas</div>
+          <div class="ctr-unit">$1.500 / dúo</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="cadenas">−</button>
+          <span class="ctr-val" data-k="cadenas">0</span>
+          <button class="ctr-btn" data-a="+" data-k="cadenas">+</button>
+        </div>
+      </div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Charm pequeño</div>
+          <div class="ctr-unit">$500 / u</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="charmPeq">−</button>
+          <span class="ctr-val" data-k="charmPeq">0</span>
+          <button class="ctr-btn" data-a="+" data-k="charmPeq">+</button>
+        </div>
+      </div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Charm mediano</div>
+          <div class="ctr-unit">$1.000 / u</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="charmMed">−</button>
+          <span class="ctr-val" data-k="charmMed">0</span>
+          <button class="ctr-btn" data-a="+" data-k="charmMed">+</button>
+        </div>
+      </div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Charm grande</div>
+          <div class="ctr-unit">$1.500 / u</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="charmGrand">−</button>
+          <span class="ctr-val" data-k="charmGrand">0</span>
+          <button class="ctr-btn" data-a="+" data-k="charmGrand">+</button>
+        </div>
+      </div>
+
+      <div class="sec-label">Joyería y encapsulados</div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Joyería (metálicos, piercings)</div>
+          <div class="ctr-unit">$500 / u</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="joyeria">−</button>
+          <span class="ctr-val" data-k="joyeria">0</span>
+          <button class="ctr-btn" data-a="+" data-k="joyeria">+</button>
+        </div>
+      </div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Encapsulado plano</div>
+          <div class="ctr-unit">$2.500 / uña</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="encapPlano">−</button>
+          <span class="ctr-val" data-k="encapPlano">0</span>
+          <button class="ctr-btn" data-a="+" data-k="encapPlano">+</button>
+        </div>
+      </div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Encapsulado en relieve</div>
+          <div class="ctr-unit">$3.000 / uña</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="encapRelieve">−</button>
+          <span class="ctr-val" data-k="encapRelieve">0</span>
+          <button class="ctr-btn" data-a="+" data-k="encapRelieve">+</button>
+        </div>
+      </div>
+      <div class="ctr-row">
+        <div class="ctr-label">
+          <div class="ctr-name">Modelado 3D</div>
+          <div class="ctr-unit">$2.000 / figura</div>
+        </div>
+        <div class="ctr-ctrl">
+          <button class="ctr-btn" data-a="−" data-k="modelado3D">−</button>
+          <span class="ctr-val" data-k="modelado3D">0</span>
+          <button class="ctr-btn" data-a="+" data-k="modelado3D">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-label" style="margin-top:0">Precios a criterio</div>
+      <div class="man-row">
+        <div class="man-name">Relieves decorativos</div>
+        <div class="man-input-wrap">
+          <span class="man-pre">$</span>
+          <input type="number" class="man-input" data-mk="relieves" placeholder="0" min="0">
+        </div>
+      </div>
+      <div class="man-row">
+        <div class="man-name">Extras de estilo (marcos, piedras, fotos)</div>
+        <div class="man-input-wrap">
+          <span class="man-pre">$</span>
+          <input type="number" class="man-input" data-mk="extras" placeholder="0" min="0">
+        </div>
+      </div>
+      <div class="man-row">
+        <div class="man-name">Diseño especial</div>
+        <div class="man-input-wrap">
+          <span class="man-pre">$</span>
+          <input type="number" class="man-input" data-mk="diseno" placeholder="0" min="0">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PASO 5 ══ -->
+  <div class="step" id="step5">
+    <div class="step-label">Paso 5 de 7</div>
+    <h2 class="step-title">Retiros</h2>
+
+    <div class="note">
+      ⚠️ El retiro solo se cobra cuando la clienta únicamente viene a retirar el sistema sin hacerse otro, o cuando cambia de sistema.
+    </div>
+
+    <div class="card">
+      <div class="tog-row">
+        <div class="tog-info">
+          <div class="tog-name">Retiro de acrílico (sistema de otra persona)</div>
+          <div class="tog-price">$15.000</div>
+        </div>
+        <div class="tog-switch">
+          <button class="tog-btn no act" data-tog="acrilico" data-v="no">No</button>
+          <button class="tog-btn si"     data-tog="acrilico" data-v="si">Sí</button>
+        </div>
+      </div>
+      <div class="tog-row">
+        <div class="tog-info">
+          <div class="tog-name">Retiro de rubber / semi / soft gel (otra persona)</div>
+          <div class="tog-price">$10.000</div>
+        </div>
+        <div class="tog-switch">
+          <button class="tog-btn no act" data-tog="rubberSemiSoft" data-v="no">No</button>
+          <button class="tog-btn si"     data-tog="rubberSemiSoft" data-v="si">Sí</button>
+        </div>
+      </div>
+      <div class="tog-row">
+        <div class="tog-info">
+          <div class="tog-name">Cambio de sistema</div>
+          <div class="tog-price">$10.000</div>
+        </div>
+        <div class="tog-switch">
+          <button class="tog-btn no act" data-tog="cambioSistema" data-v="no">No</button>
+          <button class="tog-btn si"     data-tog="cambioSistema" data-v="si">Sí</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PASO 6 ══ -->
+  <div class="step" id="step6">
+    <div class="step-label">Paso 6 de 7</div>
+    <h2 class="step-title">Experiencias Pretty ✨</h2>
+
+    <div class="addon-card" id="addon-prettyRebelon">
+      <div class="addon-head">
+        <div class="addon-chk" id="achk-prettyRebelon"></div>
+        <div class="addon-name">Experiencia Pretty Rebels</div>
+        <div class="addon-price">$30.000</div>
+      </div>
+      <div class="addon-body">
+        <ul>
+          <li>Spa efervescente</li>
+          <li>Masaje de manos y brazos</li>
+          <li>Hidratación profunda</li>
+          <li>Mascarilla facial y de labios</li>
+          <li>Bebida a elección + snack</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="addon-card" id="addon-mrRebel">
+      <div class="addon-head">
+        <div class="addon-chk" id="achk-mrRebel"></div>
+        <div class="addon-name">Experiencia Mr. Rebel</div>
+        <div class="addon-price">$30.000</div>
+      </div>
+      <div class="addon-body">
+        <ul>
+          <li>Masaje capilar o hidratación de barba</li>
+          <li>Mascarilla facial</li>
+          <li>Masaje de manos y brazos</li>
+          <li>Hidratación profunda de manos, limado de cayos</li>
+          <li>Bebida a elección + snack</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PASO 7 ══ -->
+  <div class="step" id="step7">
+    <div class="step-label">Paso 7 de 7</div>
+    <h2 class="step-title">Resumen del presupuesto</h2>
+
+    <div class="sum-header">
+      <div class="sum-name" id="sum-name">—</div>
+      <div class="sum-date" id="sum-date">—</div>
+    </div>
+
+    <div id="sum-body"></div>
+
+    <div class="sum-total-box">
+      <div class="sum-total-label">Total estimado</div>
+      <div class="sum-total-amt" id="sum-total">$0</div>
+    </div>
+
+    <div class="action-btns">
+      <button class="btn-wa" id="btn-wa">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        Copiar para WhatsApp
+      </button>
+      <button class="btn-pdf" id="btn-pdf">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Guardar PDF
+      </button>
+    </div>
+
+    <button class="btn-nueva" id="btn-nueva">+ Nueva clienta</button>
+
+    <div class="sum-footer">
+      <div class="handle">📱 @prettyrebelstudio</div>
+      <div>Instagram · TikTok</div>
+    </div>
+  </div>
+
+  <!-- NAV BUTTONS -->
+  <div class="nav" id="nav">
+    <button class="btn btn-sec" id="btn-back" style="display:none">← Atrás</button>
+    <button class="btn btn-pri" id="btn-next">Siguiente →</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✓ Texto copiado. Pégalo en WhatsApp.</div>
+
+<script>
+const S = {
+  step: 1,
+  nombre: '',
+  fecha: '',
+  svc: null,        // 'semi' | 'rubber' | 'softgel'
+  sgTalla: '',      // 'S'|'M'|'L'|'XL'
+  sgXLPrecio: 0,
+  retoque: false,
+  ctr: {
+    blingPeq: 0, blingMed: 0, blingGrand: 0,
+    cadenas: 0,
+    charmPeq: 0, charmMed: 0, charmGrand: 0,
+    joyeria: 0,
+    encapPlano: 0, encapRelieve: 0, modelado3D: 0,
+  },
+  man: { relieves: 0, extras: 0, diseno: 0 },
+  ret: { acrilico: false, rubberSemiSoft: false, cambioSistema: false },
+  add: { prettyRebelon: false, mrRebel: false },
+};
+
+const CTR_PRECIO = {
+  blingPeq: 1000, blingMed: 500, blingGrand: 1000,
+  cadenas: 1500,
+  charmPeq: 500, charmMed: 1000, charmGrand: 1500,
+  joyeria: 500,
+  encapPlano: 2500, encapRelieve: 3000, modelado3D: 2000,
+};
+
+const CTR_LABEL = {
+  blingPeq: 'Bling pequeño', blingMed: 'Bling mediano', blingGrand: 'Bling grande',
+  cadenas: 'Cadenas',
+  charmPeq: 'Charm pequeño', charmMed: 'Charm mediano', charmGrand: 'Charm grande',
+  joyeria: 'Joyería',
+  encapPlano: 'Encapsulado plano', encapRelieve: 'Encapsulado en relieve', modelado3D: 'Modelado 3D',
+};
+
+const RET_PRECIO = { acrilico: 15000, rubberSemiSoft: 10000, cambioSistema: 10000 };
+const RET_LABEL  = {
+  acrilico: 'Retiro de acrílico (sistema de otra persona)',
+  rubberSemiSoft: 'Retiro de rubber / semi / soft gel (otra persona)',
+  cambioSistema: 'Cambio de sistema',
+};
+
+const ADD_PRECIO = { prettyRebelon: 30000, mrRebel: 30000 };
+const ADD_LABEL  = { prettyRebelon: 'Experiencia Pretty Rebels', mrRebel: 'Experiencia Mr. Rebel' };
+
+const SVC_PRECIO = { semi: 55000, rubber: 65000 };
+const SVC_LABEL  = { semi: 'Semipermanente', rubber: 'Rubber Base' };
+
+const MESES = ['enero','febrero','marzo','abril','mayo','junio',
+               'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('es-CO');
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const [y, m, dd] = d.split('-').map(Number);
+  return `${dd} de ${MESES[m - 1]} de ${y}`;
+}
+
+function basePrice() {
+  if (!S.svc) return 0;
+  if (S.svc === 'softgel') {
+    if (S.sgTalla === 'XL') return S.sgXLPrecio || 0;
+    return { S: 60000, M: 70000, L: 100000 }[S.sgTalla] || 0;
+  }
+  return SVC_PRECIO[S.svc] || 0;
+}
+
+function baseName() {
+  if (!S.svc) return '';
+  if (S.svc === 'softgel') return S.sgTalla ? `Soft Gel ${S.sgTalla}` : 'Soft Gel';
+  return SVC_LABEL[S.svc] || '';
+}
+
+function total() {
+  let t = basePrice();
+  if (S.retoque) t += basePrice();
+  for (const k in S.ctr) t += S.ctr[k] * CTR_PRECIO[k];
+  for (const k in S.man) t += S.man[k] || 0;
+  for (const k in S.ret) if (S.ret[k]) t += RET_PRECIO[k];
+  for (const k in S.add) if (S.add[k]) t += ADD_PRECIO[k];
+  return t;
+}
+
+/* ── Navigation ── */
+function goTo(n) {
+  document.getElementById(`step${S.step}`).classList.remove('active');
+  S.step = n;
+  document.getElementById(`step${n}`).classList.add('active');
+  updateDots();
+  updateNav();
+  if (n === 7) buildSummary();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateDots() {
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.remove('active', 'done');
+    if (i + 1 === S.step) d.classList.add('active');
+    else if (i + 1 < S.step) d.classList.add('done');
+  });
+}
+
+function updateNav() {
+  const nav  = document.getElementById('nav');
+  const back = document.getElementById('btn-back');
+  const next = document.getElementById('btn-next');
+  if (S.step === 7) {
+    nav.style.display = 'none';
+    return;
+  }
+  nav.style.display = 'flex';
+  back.style.display = S.step > 1 ? 'flex' : 'none';
+  next.textContent   = S.step === 6 ? 'Ver resumen →' : 'Siguiente →';
+}
+
+document.getElementById('btn-next').addEventListener('click', () => {
+  if (S.step === 1) {
+    const n = document.getElementById('clientName').value.trim();
+    const f = document.getElementById('appointmentDate').value;
+    if (!n) { alert('Por favor ingresa el nombre de la clienta.'); return; }
+    if (!f) { alert('Por favor selecciona la fecha de la cita.'); return; }
+    S.nombre = n; S.fecha = f;
+  }
+  if (S.step === 2) {
+    if (!S.svc) { alert('Por favor selecciona un servicio base.'); return; }
+    if (S.svc === 'softgel' && !S.sgTalla) { alert('Por favor selecciona la talla del Soft Gel.'); return; }
+  }
+  if (S.step < 7) goTo(S.step + 1);
+});
+
+document.getElementById('btn-back').addEventListener('click', () => {
+  if (S.step > 1) goTo(S.step - 1);
+});
+
+document.getElementById('btn-nueva').addEventListener('click', () => {
+  if (!confirm('¿Empezar con una nueva clienta? Se borrarán los datos actuales.')) return;
+  location.reload();
+});
+
+/* ── Paso 2: service options ── */
+document.querySelectorAll('.srv-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.srv-opt').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    S.svc = opt.dataset.svc;
+    S.sgTalla = '';
+    S.sgXLPrecio = 0;
+
+    const sub = document.getElementById('sg-sub');
+    if (S.svc === 'softgel') {
+      sub.classList.add('on');
+    } else {
+      sub.classList.remove('on');
+      document.querySelectorAll('.talla-btn').forEach(b => b.classList.remove('sel'));
+      document.getElementById('xl-wrap').classList.remove('on');
+    }
+    syncRetoque();
+  });
+});
+
+document.querySelectorAll('.talla-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelectorAll('.talla-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    S.sgTalla = btn.dataset.talla;
+    S.sgXLPrecio = 0;
+
+    const xlw = document.getElementById('xl-wrap');
+    if (S.sgTalla === 'XL') {
+      xlw.classList.add('on');
+    } else {
+      xlw.classList.remove('on');
+      document.getElementById('sg-xl-input').value = '';
+    }
+
+    const lbl = document.getElementById('sg-price-lbl');
+    lbl.textContent = { S: '$60.000', M: '$70.000', L: '$100.000', XL: 'Precio libre' }[S.sgTalla];
+    syncRetoque();
+  });
+});
+
+document.getElementById('sg-xl-input').addEventListener('input', e => {
+  S.sgXLPrecio = parseInt(e.target.value) || 0;
+  syncRetoque();
+});
+
+/* ── Paso 3: retoque ── */
+function syncRetoque() {
+  const p = basePrice();
+  document.getElementById('retoque-price').textContent = p > 0 ? fmt(p) : '—';
+}
+
+document.getElementById('retoque-opt').addEventListener('click', () => {
+  S.retoque = !S.retoque;
+  document.getElementById('retoque-opt').classList.toggle('on', S.retoque);
+  document.getElementById('retoque-box').textContent = S.retoque ? '✓' : '';
+});
+
+/* ── Paso 4: counters ── */
+document.querySelectorAll('.ctr-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const k = btn.dataset.k;
+    if (btn.dataset.a === '+') S.ctr[k]++;
+    else if (S.ctr[k] > 0) S.ctr[k]--;
+    document.querySelector(`.ctr-val[data-k="${k}"]`).textContent = S.ctr[k];
+  });
+});
+
+document.querySelectorAll('.man-input').forEach(inp => {
+  inp.addEventListener('input', () => {
+    S.man[inp.dataset.mk] = parseInt(inp.value) || 0;
+  });
+});
+
+/* ── Paso 5: toggles ── */
+document.querySelectorAll('.tog-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.tog;
+    const val = btn.dataset.v;
+    S.ret[key] = val === 'si';
+    btn.closest('.tog-switch').querySelectorAll('.tog-btn').forEach(b => b.classList.remove('act'));
+    btn.classList.add('act');
+  });
+});
+
+/* ── Paso 6: addons ── */
+document.querySelectorAll('.addon-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const k = card.id.replace('addon-', '');
+    S.add[k] = !S.add[k];
+    card.classList.toggle('on', S.add[k]);
+    document.getElementById(`achk-${k}`).textContent = S.add[k] ? '✓' : '';
+  });
+});
+
+/* ── Paso 7: summary ── */
+function mkSection(title) {
+  const d = document.createElement('div');
+  d.className = 'sum-section';
+  const h = document.createElement('div');
+  h.className = 'sum-sec-title';
+  h.textContent = title;
+  d.appendChild(h);
+  return d;
+}
+
+function mkItem(label, precio) {
+  const r = document.createElement('div');
+  r.className = 'sum-item';
+  r.innerHTML = `<span class="sum-item-label">${label}</span><span class="sum-item-price">${fmt(precio)}</span>`;
+  return r;
+}
+
+function buildSummary() {
+  document.getElementById('sum-name').textContent = S.nombre || '—';
+  document.getElementById('sum-date').textContent = fmtDate(S.fecha);
+
+  const body = document.getElementById('sum-body');
+  body.innerHTML = '';
+
+  const bp = basePrice();
+  if (bp > 0) {
+    const sec = mkSection('Servicio base');
+    sec.appendChild(mkItem(baseName(), bp));
+    body.appendChild(sec);
+  }
+
+  if (S.retoque && bp > 0) {
+    const sec = mkSection('Retoque');
+    sec.appendChild(mkItem('Retoque de rubber / mantenimiento', bp));
+    body.appendChild(sec);
+  }
+
+  const decItems = [];
+  for (const k in S.ctr) {
+    if (S.ctr[k] > 0) decItems.push({ l: CTR_LABEL[k], p: S.ctr[k] * CTR_PRECIO[k] });
+  }
+  if (S.man.relieves > 0) decItems.push({ l: 'Relieves decorativos', p: S.man.relieves });
+  if (S.man.extras   > 0) decItems.push({ l: 'Extras de estilo', p: S.man.extras });
+  if (S.man.diseno   > 0) decItems.push({ l: 'Diseño especial', p: S.man.diseno });
+  if (decItems.length) {
+    const sec = mkSection('Decoraciones');
+    decItems.forEach(i => sec.appendChild(mkItem(i.l, i.p)));
+    body.appendChild(sec);
+  }
+
+  const retItems = [];
+  for (const k in S.ret) if (S.ret[k]) retItems.push({ l: RET_LABEL[k], p: RET_PRECIO[k] });
+  if (retItems.length) {
+    const sec = mkSection('Retiros');
+    retItems.forEach(i => sec.appendChild(mkItem(i.l, i.p)));
+    body.appendChild(sec);
+  }
+
+  const addItems = [];
+  for (const k in S.add) if (S.add[k]) addItems.push({ l: ADD_LABEL[k], p: ADD_PRECIO[k] });
+  if (addItems.length) {
+    const sec = mkSection('Experiencias');
+    addItems.forEach(i => sec.appendChild(mkItem(i.l, i.p)));
+    body.appendChild(sec);
+  }
+
+  document.getElementById('sum-total').textContent = fmt(total());
+}
+
+/* ── WhatsApp ── */
+document.getElementById('btn-wa').addEventListener('click', () => {
+  const lines = [];
+  lines.push('💅 *PRETTY REBELS STUDIO*');
+  lines.push(`Presupuesto para: *${S.nombre}*`);
+  lines.push(`Cita: ${fmtDate(S.fecha)}`);
+  lines.push('');
+
+  const bp = basePrice();
+  if (bp > 0) {
+    lines.push('*Servicio base*');
+    lines.push(`• ${baseName()}: ${fmt(bp)}`);
+  }
+
+  if (S.retoque && bp > 0) {
+    lines.push('');
+    lines.push('*Retoque*');
+    lines.push(`• Retoque de rubber / mantenimiento: ${fmt(bp)}`);
+  }
+
+  const decLines = [];
+  for (const k in S.ctr) {
+    if (S.ctr[k] > 0) decLines.push(`• ${CTR_LABEL[k]} (×${S.ctr[k]}): ${fmt(S.ctr[k] * CTR_PRECIO[k])}`);
+  }
+  if (S.man.relieves > 0) decLines.push(`• Relieves decorativos: ${fmt(S.man.relieves)}`);
+  if (S.man.extras   > 0) decLines.push(`• Extras de estilo: ${fmt(S.man.extras)}`);
+  if (S.man.diseno   > 0) decLines.push(`• Diseño especial: ${fmt(S.man.diseno)}`);
+  if (decLines.length) { lines.push(''); lines.push('*Decoraciones*'); lines.push(...decLines); }
+
+  const retLines = [];
+  for (const k in S.ret) if (S.ret[k]) retLines.push(`• ${RET_LABEL[k]}: ${fmt(RET_PRECIO[k])}`);
+  if (retLines.length) { lines.push(''); lines.push('*Retiros*'); lines.push(...retLines); }
+
+  const addLines = [];
+  for (const k in S.add) if (S.add[k]) addLines.push(`• ${ADD_LABEL[k]}: ${fmt(ADD_PRECIO[k])}`);
+  if (addLines.length) { lines.push(''); lines.push('*Experiencias*'); lines.push(...addLines); }
+
+  lines.push('');
+  lines.push('━━━━━━━━━━━━━━━━━');
+  lines.push(`💰 *TOTAL: ${fmt(total())}*`);
+  lines.push('');
+  lines.push('📱 @prettyrebelstudio');
+  lines.push('Instagram · TikTok');
+
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }).finally(() => {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  });
+});
+
+/* ── PDF ── */
+document.getElementById('btn-pdf').addEventListener('click', () => window.print());
+
+/* ── Init ── */
+updateNav();
+</script>
+</body>
+</html>
